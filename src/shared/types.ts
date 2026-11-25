@@ -22,6 +22,8 @@ export type ErrorCode =
   | 'NOT_A_VIDEO_LINK'
   | 'PLAYLIST_LINK'
   | 'VIDEO_UNAVAILABLE'
+  | 'YOUTUBE_BOT_CHECK'
+  | 'INVALID_COOKIES'
   | 'LIVE_NOT_SUPPORTED'
   | 'YTDLP_FAILED'
   | 'YTDLP_MISSING'
@@ -142,6 +144,9 @@ export interface FolderListing {
   folders: Folder[];
 }
 
+/** The largest cookies.txt accepted (a browser's whole export fits). */
+export const MAX_COOKIES_LENGTH = 1_000_000;
+
 export interface SystemInfo {
   version: string;
   ytDlp: {
@@ -155,6 +160,8 @@ export interface SystemInfo {
     lastCheck: string | null;
   };
   ffmpeg: { version: string | null };
+  /** YouTube cookies, for when YouTube asks to confirm it isn't a bot (the cookies themselves are never sent). */
+  cookies: { added: boolean; updatedAt: string | null };
   /** Space on the media folder's disk, in bytes. */
   media: { free: number | null; total: number | null };
   maxConcurrent: number;

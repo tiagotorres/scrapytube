@@ -87,7 +87,10 @@ export function createApp(ctx: AppContext) {
     await next();
   });
 
-  app.use('/api/*', bodyLimit({ maxSize: 64 * 1024, onError: tooLarge }));
+  // A cookies.txt exported from a browser can be large; everything else is small.
+  const smallBody = bodyLimit({ maxSize: 64 * 1024, onError: tooLarge });
+  const cookiesBody = bodyLimit({ maxSize: 2 * 1024 * 1024, onError: tooLarge });
+  app.use('/api/*', (c, next) => (c.req.path === '/api/system/cookies' ? cookiesBody : smallBody)(c, next));
 
   app.use('/api/*', async (c, next) => {
     const token = getCookie(c, SESSION_COOKIE);

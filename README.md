@@ -13,6 +13,7 @@ Portuguese.
 - **Share from YouTube.** On Android, once ScrapyTube is installed from the browser, it appears in the YouTube app's *Share* menu. On iPhone, a Shortcut does the same (see below).
 - **Several people.** Each has their own account; everyone shares the media folder and sees all the downloads (and who asked for each).
 - **yt-dlp stays up to date.** YouTube changes often; ScrapyTube updates its own yt-dlp once a day, or when you ask in *Settings → Downloader*.
+- **When YouTube asks to confirm you're not a bot**, add YouTube cookies in *Settings → Downloader* (see below).
 
 Only single videos: a playlist link is refused, and a link to a video inside a
 playlist downloads that video only.
@@ -94,11 +95,30 @@ use *Install app* (Android) or *Share → Add to Home Screen* (iPhone).
 - **Android**: once installed, ScrapyTube is in the *Share* menu of the YouTube app (and of any app sharing a link). Sharing opens it with the video ready: choose Video or Music.
 - **iPhone**: iOS doesn't let web apps receive shares, but a Shortcut can. In *Shortcuts*, make a shortcut that *Receives URLs from the Share Sheet*, and whose action is *Open URLs* with `https://<your ScrapyTube address>/share?url=` followed by *Shortcut Input*. It then shows in the YouTube app's *Share → More*.
 
+### When YouTube asks to confirm you're not a bot
+
+YouTube sometimes refuses the NAS's connection with *Sign in to confirm you're
+not a bot*, even when the same video downloads fine from your computer: it
+judges the network address, not the video. yt-dlp then needs the cookies of a
+signed-in YouTube session. Following
+[yt-dlp's advice](https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies):
+
+1. Open a **private** (incognito) window and sign in to YouTube, preferably with a spare Google account: YouTube may suspend accounts used to download.
+2. In that window, open a new tab, close the YouTube tab, and go to `https://www.youtube.com/robots.txt` (it should be the only tab of the private window).
+3. Export the cookies of youtube.com to a `cookies.txt` file (Netscape format) with an extension allowed in private windows, such as *Get cookies.txt LOCALLY* (Chrome) or *cookies.txt* (Firefox).
+4. Close the private window, without signing out: YouTube then never changes those cookies.
+5. In ScrapyTube, *Settings → Downloader → YouTube cookies → Add*, and pick the file.
+
+The cookies are kept in `/data/cookies.txt`, readable by ScrapyTube only, and
+never shown again; each run of yt-dlp gets a copy of its own. If YouTube asks
+again weeks later, the cookies have expired: export new ones the same way, and
+*Replace the cookies*.
+
 ### Data and backups
 
 | In the container | Example on the NAS | What is in it |
 | --- | --- | --- |
-| `/data` | `/volume1/docker/scrapytube/data` | `scrapytube.db` (and `-wal`, `-shm`): the accounts and the downloads list; `bin/yt-dlp`, ScrapyTube's own copy; `tmp/`, downloads in progress; `cache/` |
+| `/data` | `/volume1/docker/scrapytube/data` | `scrapytube.db` (and `-wal`, `-shm`): the accounts and the downloads list; `bin/yt-dlp`, ScrapyTube's own copy; `tmp/`, downloads in progress; `cache/`; `cookies.txt`, the YouTube cookies if added |
 | `/media` | `/volume1/media` | The videos and music |
 
 Back up `/data` (or download a consistent copy of the database from
@@ -130,10 +150,9 @@ Environment variables of the container:
 | `SESSION_DAYS` | `180` | How long a device stays signed in without being used |
 
 **yt-dlp options of your own.** ScrapyTube reads a `yt-dlp.conf` placed in the
-data folder (`/data/yt-dlp.conf`), for options it doesn't set itself: a proxy,
-or the cookies of a YouTube account (`--cookies /data/cookies.txt`) for videos
-that need you to be signed in. Options ScrapyTube sets (formats, file names)
-take precedence.
+data folder (`/data/yt-dlp.conf`), for options it doesn't set itself, such as a
+proxy (`--proxy socks5://…`). Options ScrapyTube sets (formats, file names,
+cookies) take precedence; add YouTube cookies in Settings instead.
 
 ---
 
@@ -201,7 +220,7 @@ How it is put together (the same base as Arctir):
 
 Playlists and whole channels; sites other than YouTube; choosing a video
 quality; subtitles; renaming, moving or deleting files and folders from the
-app; signing in to YouTube from the app (a `yt-dlp.conf` with cookies works).
+app; signing in to YouTube from the app (cookies come from a `cookies.txt` file).
 
 ## License
 

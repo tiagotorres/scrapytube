@@ -15,8 +15,10 @@ export interface CommonOptions {
   /** Node.js: yt-dlp needs a JavaScript runtime to read YouTube's pages. */
   nodePath: string;
   cacheDir: string;
-  /** A yt-dlp.conf of the person's own (cookies, proxy…), or null. */
+  /** A yt-dlp.conf of the person's own (proxy…), or null. */
   configFile: string | null;
+  /** YouTube cookies (a copy for this run: yt-dlp rewrites the file), or null. */
+  cookiesFile: string | null;
   ffmpegPath: string;
 }
 
@@ -25,15 +27,45 @@ function commonArgs(options: CommonOptions): string[] {
   if (options.configFile) args.push('--config-locations', options.configFile);
   args.push('--no-js-runtimes', '--js-runtimes', `node:${options.nodePath}`);
   args.push('--cache-dir', options.cacheDir);
+  if (options.cookiesFile) args.push('--cookies', options.cookiesFile);
   if (options.ffmpegPath !== 'ffmpeg') args.push('--ffmpeg-location', options.ffmpegPath);
   // A link to a video in a playlist downloads the video only.
   args.push('--no-playlist', '--color', 'never');
   return args;
 }
 
-/** Asks for what YouTube says about a video, as JSON, without downloading it. */
+/** What ScrapyTube reads about a video (see toVideoInfo in output.ts). */
+const INFO_FIELDS = [
+  'id',
+  'title',
+  'channel',
+  'uploader',
+  'uploader_id',
+  'uploader_url',
+  'channel_url',
+  'duration',
+  'upload_date',
+  'thumbnail',
+  'live_status',
+  'is_live',
+  '_type',
+];
+
+/**
+ * Asks for what YouTube says about a video, as one line of JSON, without
+ * downloading it. Only the fields ScrapyTube reads: all of them can weigh
+ * megabytes (every format, and captions in 150 languages).
+ */
 export function probeArgs(options: CommonOptions, url: string): string[] {
-  return [...commonArgs(options), '--dump-single-json', '--skip-download', '--no-warnings', '--', url];
+  return [
+    ...commonArgs(options),
+    '--skip-download',
+    '--no-warnings',
+    '--print',
+    `%(.{${INFO_FIELDS.join(',')}})j`,
+    '--',
+    url,
+  ];
 }
 
 /**

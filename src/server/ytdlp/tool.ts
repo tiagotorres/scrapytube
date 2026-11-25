@@ -5,6 +5,7 @@ import path from 'node:path';
 import type { SystemInfo } from '#shared/types.ts';
 
 import type { Config } from '../config.ts';
+import { CookieStore } from '../cookies.ts';
 import { HttpError } from '../errors.ts';
 import type { CommonOptions } from './args.ts';
 import { runCommand } from './process.ts';
@@ -72,10 +73,20 @@ export class YtDlpTool {
   lastCheck: string | null = null;
   /** Called after an update, so waiting downloads can start. */
   onUpdated: () => void = () => {};
+  /** YouTube cookies, if someone added them. */
+  readonly cookies: CookieStore;
 
   constructor(config: Config) {
     this.config = config;
     this.managed = config.ytDlp.path === null;
+    this.cookies = new CookieStore(config.dataDir);
+  }
+
+  /** Where runs of yt-dlp keep their files (DATA_DIR/tmp). */
+  get tempDir(): string {
+    const dir = path.join(this.config.dataDir, 'tmp');
+    mkdirSync(dir, { recursive: true });
+    return dir;
   }
 
   get updating(): boolean {
@@ -86,13 +97,25 @@ export class YtDlpTool {
     return path.join(this.config.dataDir, 'bin', process.platform === 'win32' ? 'yt-dlp.exe' : 'yt-dlp');
   }
 
-  /** Options every yt-dlp command line has. */
-  commonOptions(): CommonOptions {
+  /**
+   * Options every yt-dlp command line has. `runDir` is a folder of the run's
+   * own: the cookies are copied there, as yt-dlp rewrites the file it reads
+   * them from (two runs writing the same file could spoil it).
+   */
+  commonOptions(runDir: string): CommonOptions {
     const configFile = path.join(this.config.dataDir, 'yt-dlp.conf');
+    let cookiesFile: string | null = null;
+    const cookies = this.cookies.path;
+    if (cookies) {
+      cookiesFile = path.join(runDir, 'cookies.txt');
+      copyFileSync(cookies, cookiesFile);
+      chmodSync(cookiesFile, 0o600);
+    }
     return {
       nodePath: process.execPath,
       cacheDir: path.join(this.config.dataDir, 'cache', 'yt-dlp'),
       configFile: existsSync(configFile) ? configFile : null,
+      cookiesFile,
       ffmpegPath: this.config.ffmpegPath,
     };
   }

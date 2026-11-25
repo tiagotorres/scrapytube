@@ -59,6 +59,11 @@ export function parseVideoLink(text: string): ParsedLink {
   return { ok: true, id, url: videoPageUrl(id) };
 }
 
+/** YouTube asked yt-dlp to sign in: "Sign in to confirm you’re not a bot". */
+export function isBotCheck(message: string): boolean {
+  return /confirm you.{0,3}re not a bot/i.test(message);
+}
+
 /** A small picture of the video, from YouTube (16:9). */
 export function thumbnailUrl(id: string): string {
   return `https://i.ytimg.com/vi/${id}/mqdefault.jpg`;

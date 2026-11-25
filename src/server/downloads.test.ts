@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import type { Download } from '#shared/types.ts';
 
 import type { Runner } from './queue.ts';
+import { HttpError } from './errors.ts';
 import { MARKS } from './ytdlp/args.ts';
 import * as helpers from './test-helpers.ts';
 import { tick, videoInfo } from './test-helpers.ts';
@@ -230,6 +231,61 @@ describe('folders', () => {
     expect(
       (await client.post('/api/downloads', { url: LINK, kind: 'video', folder: 'escape', channelFolder: false })).status,
     ).toBe(400);
+  });
+});
+
+const COOKIES = ['# Netscape HTTP Cookie File', ['.youtube.com', 'TRUE', '/', 'TRUE', '1798761600', 'SID', 'secret'].join('\t')].join('\n');
+
+describe('YouTube cookies', () => {
+  it('are added, used by each download through a copy of their own, and removed', async () => {
+    const yt = fakeYtDlp();
+    let copy = '';
+    const runner: Runner = async (args, options) => {
+      copy = args[args.indexOf('--cookies') + 1] ?? '';
+      expect(readFileSync(copy, 'utf8')).toContain('secret');
+      return yt.runner(args, options);
+    };
+    const { client, dataDir } = await setUpApp({ runner });
+    expect((await client.get('/api/system')).body.cookies).toEqual({ added: false, updatedAt: null });
+
+    const added = await client.put('/api/system/cookies', { text: COOKIES });
+    expect(added.status).toBe(200);
+    expect(added.body.cookies.added).toBe(true);
+    expect(JSON.stringify(added.body)).not.toContain('secret');
+    expect(statSync(path.join(dataDir, 'cookies.txt')).mode & 0o777).toBe(0o600);
+
+    const res = await client.post<Download>('/api/downloads', { url: LINK, kind: 'music', folder: '', channelFolder: false });
+    await waitFor(client, res.body.id, ['done']);
+    expect(copy).toBe(path.join(dataDir, 'tmp', String(res.body.id), 'cookies.txt'));
+    expect(existsSync(copy)).toBe(false); // Gone with the download's temporary folder.
+
+    expect((await client.delete('/api/system/cookies')).body.cookies.added).toBe(false);
+    expect(existsSync(path.join(dataDir, 'cookies.txt'))).toBe(false);
+  });
+
+  it('refuses a file without YouTube cookies', async () => {
+    const { client } = await setUpApp();
+    expect((await client.put('/api/system/cookies', { text: '{"cookies": []}' })).body.error).toBe('INVALID_COOKIES');
+    const google = COOKIES.replace('.youtube.com', '.example.com');
+    expect((await client.put('/api/system/cookies', { text: google })).body.error).toBe('INVALID_COOKIES');
+  });
+
+  it('accept a whole browser export (over the usual size limit)', async () => {
+    const { client } = await setUpApp();
+    const big = `${COOKIES}\n${Array.from({ length: 3000 }, (_, i) => ['.example.com', 'TRUE', '/', 'FALSE', '0', `c${i}`, 'x'.repeat(20)].join('\t')).join('\n')}`;
+    expect(big.length).toBeGreaterThan(64 * 1024);
+    expect((await client.put('/api/system/cookies', { text: big })).status).toBe(200);
+  });
+
+  it('passes YouTube’s bot check on as its own error', async () => {
+    const { client } = await setUpApp({
+      fetchInfo: async () => {
+        throw new HttpError(422, 'YOUTUBE_BOT_CHECK', 'Sign in to confirm you’re not a bot.');
+      },
+    });
+    const res = await client.post('/api/probe', { url: LINK });
+    expect(res.status).toBe(422);
+    expect(res.body.error).toBe('YOUTUBE_BOT_CHECK');
   });
 });
 

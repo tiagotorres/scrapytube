@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router';
 
-import { AlertCircle, ChevronLeft, Clapperboard, Music } from 'lucide-react';
+import { AlertCircle, ChevronLeft, Clapperboard, Cookie, Music } from 'lucide-react';
 
 import { downloadPath } from '#shared/paths.ts';
 import type { DownloadKind, VideoInfo } from '#shared/types.ts';
@@ -38,19 +38,29 @@ function VideoCard({
   onRetry: () => void;
 }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   if (error) {
-    const detail = error instanceof ApiError && error.message !== error.code ? error.message : null;
+    // YouTube's "confirm you're not a bot": yt-dlp's long advice is replaced by where to add cookies.
+    const botCheck = isApiError(error, 'YOUTUBE_BOT_CHECK');
+    const detail = !botCheck && error instanceof ApiError && error.message !== error.code ? error.message : null;
     return (
       <div className={styles.problem} role="alert">
         <AlertCircle size={22} className={styles.problemIcon} />
         <div className={styles.problemText}>
           <strong>{errorMessage(error)}</strong>
           {detail && <span className={styles.detail}>{detail}</span>}
-          {videoId && (
-            <Button size="sm" variant="soft" className={styles.problemRetry} onClick={onRetry}>
-              {t('common.retry')}
-            </Button>
-          )}
+          <div className={styles.problemActions}>
+            {botCheck && (
+              <Button size="sm" variant="soft" icon={<Cookie size={16} />} onClick={() => navigate('/settings')}>
+                {t('newDownload.addCookies')}
+              </Button>
+            )}
+            {videoId && (
+              <Button size="sm" variant="soft" onClick={onRetry}>
+                {t('common.retry')}
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     );

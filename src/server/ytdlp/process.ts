@@ -11,7 +11,7 @@ export interface RunResult {
 }
 
 /** Keeps the end of a long output (yt-dlp's last lines say what went wrong). */
-function keepTail(text: string, max = 200_000): string {
+function keepTail(text: string, max: number): string {
   return text.length > max ? text.slice(-max) : text;
 }
 
@@ -21,6 +21,12 @@ export interface RunOptions {
   /** Called with each complete line, as it comes. */
   onLine?: (line: string, stream: 'stdout' | 'stderr') => void;
   env?: NodeJS.ProcessEnv;
+  /**
+   * How much of each output to keep (its end), in characters. Downloads print
+   * progress for as long as they run; a command whose whole answer is needed
+   * must fit in it.
+   */
+  maxOutput?: number;
 }
 
 /**
@@ -28,6 +34,7 @@ export interface RunOptions {
  * it also stops what it started (yt-dlp runs ffmpeg).
  */
 export function runCommand(command: string, args: string[], options: RunOptions = {}): Promise<RunResult> {
+  const maxOutput = options.maxOutput ?? 200_000;
   return new Promise(resolve => {
     let stdout = '';
     let stderr = '';
@@ -67,8 +74,8 @@ export function runCommand(command: string, args: string[], options: RunOptions 
       let pending = '';
       return (chunk: Buffer) => {
         const text = chunk.toString('utf8');
-        if (stream === 'stdout') stdout = keepTail(stdout + text);
-        else stderr = keepTail(stderr + text);
+        if (stream === 'stdout') stdout = keepTail(stdout + text, maxOutput);
+        else stderr = keepTail(stderr + text, maxOutput);
         if (!options.onLine) return;
         pending += text;
         const parts = pending.split(/\r?\n|\r/);

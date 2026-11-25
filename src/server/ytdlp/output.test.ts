@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { MARKS, downloadArgs, escapeTemplate } from './args.ts';
-import { ProgressTracker, errorMessage, parseLine, toVideoInfo } from './output.ts';
+import { MARKS, downloadArgs, escapeTemplate, probeArgs } from './args.ts';
+import { ProgressTracker, errorMessage, isBotCheck, parseLine, toVideoInfo } from './output.ts';
 import { compareVersions, tidyUpdateMessage } from './tool.ts';
 
-const OPTIONS = { nodePath: '/usr/bin/node', cacheDir: '/data/cache', configFile: null, ffmpegPath: 'ffmpeg' };
+const OPTIONS = { nodePath: '/usr/bin/node', cacheDir: '/data/cache', configFile: null, cookiesFile: null, ffmpegPath: 'ffmpeg' };
 
 describe('what yt-dlp says about a video', () => {
   it('keeps the title, the channel and its handle', () => {
@@ -45,11 +45,32 @@ describe('what yt-dlp says about a video', () => {
     expect(toVideoInfo({ id: 'abcdefghijk', live_status: 'is_upcoming' })).toEqual({ ok: false, reason: 'LIVE_NOT_SUPPORTED' });
   });
 
+  it('tells YouTube’s bot check from other errors', () => {
+    const message = errorMessage(
+      'ERROR: [youtube] dQw4w9WgXcQ: Sign in to confirm you’re not a bot. This helps protect our community. Use --cookies-from-browser or --cookies for the authentication.',
+    )!;
+    expect(isBotCheck(message)).toBe(true);
+    expect(isBotCheck("Sign in to confirm you're not a bot")).toBe(true);
+    expect(isBotCheck('Sign in to confirm your age')).toBe(false);
+  });
+
   it('reads the last error', () => {
     expect(errorMessage('WARNING: x\nERROR: [youtube] dQw4w9WgXcQ: Video unavailable. This video is private\n')).toBe(
       'Video unavailable. This video is private',
     );
     expect(errorMessage('all good')).toBeNull();
+  });
+});
+
+describe('the lookup command', () => {
+  it('asks only for the fields ScrapyTube reads, as one line of JSON', () => {
+    const args = probeArgs(OPTIONS, 'https://www.youtube.com/watch?v=Jatwf_XOncE');
+    const template = args[args.indexOf('--print') + 1];
+    expect(template).toBe(
+      '%(.{id,title,channel,uploader,uploader_id,uploader_url,channel_url,duration,upload_date,thumbnail,live_status,is_live,_type})j',
+    );
+    expect(args).not.toContain('--dump-single-json');
+    expect(args.slice(-2)).toEqual(['--', 'https://www.youtube.com/watch?v=Jatwf_XOncE']);
   });
 });
 
@@ -84,6 +105,17 @@ describe('the download command', () => {
     expect(args.join(' ')).toContain('--extract-audio --audio-format mp3 --audio-quality 0');
     expect(args).toContain('--embed-thumbnail');
     expect(args).toContain('--force-overwrites');
+  });
+
+  it('gives yt-dlp the cookies when there are some', () => {
+    const args = downloadArgs(
+      { ...OPTIONS, cookiesFile: '/data/tmp/3/cookies.txt' },
+      { url: 'https://www.youtube.com/watch?v=jNQXAC9IVRw', kind: 'video', folder: '/m', tempFolder: '/data/tmp/3', baseName: 'x', overwrite: false },
+    );
+    expect(args.join(' ')).toContain('--cookies /data/tmp/3/cookies.txt');
+    expect(downloadArgs(OPTIONS, { url: 'u', kind: 'video', folder: '/m', tempFolder: '/t', baseName: 'x', overwrite: false })).not.toContain(
+      '--cookies',
+    );
   });
 
   it('escapes % in names', () => {

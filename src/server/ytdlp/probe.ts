@@ -1,8 +1,11 @@
+import { mkdtempSync, rmSync } from 'node:fs';
+import path from 'node:path';
+
 import type { VideoInfo } from '#shared/types.ts';
 
 import { HttpError } from '../errors.ts';
 import { probeArgs } from './args.ts';
-import { errorMessage, isUnavailable, toVideoInfo } from './output.ts';
+import { errorMessage, isBotCheck, isUnavailable, toVideoInfo } from './output.ts';
 import { runCommand } from './process.ts';
 import type { YtDlpTool } from './tool.ts';
 
@@ -12,15 +15,28 @@ export type FetchInfo = (url: string) => Promise<VideoInfo>;
 /** Asks yt-dlp about a video. */
 export function ytDlpFetchInfo(tool: YtDlpTool): FetchInfo {
   return async url => {
-    const result = await runCommand(tool.require(), probeArgs(tool.commonOptions(), url), { timeoutMs: 90_000 });
+    const command = tool.require();
+    // A folder of its own for this run, for its copy of the cookies.
+    const dir = mkdtempSync(path.join(tool.tempDir, 'lookup-'));
+    let result;
+    try {
+      // The answer is one line of a few hundred bytes; the limit is far above it.
+      result = await runCommand(command, probeArgs(tool.commonOptions(dir), url), {
+        timeoutMs: 90_000,
+        maxOutput: 5_000_000,
+      });
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
     if (result.code !== 0) {
       const message = errorMessage(result.stderr) ?? (result.stopped ? 'YouTube took too long to answer.' : null);
+      if (message && isBotCheck(message)) throw new HttpError(422, 'YOUTUBE_BOT_CHECK', message);
       if (message && isUnavailable(message)) throw new HttpError(422, 'VIDEO_UNAVAILABLE', message);
       throw new HttpError(502, 'YTDLP_FAILED', message ?? `yt-dlp stopped (code ${result.code}).`);
     }
     let raw: unknown;
     try {
-      raw = JSON.parse(result.stdout);
+      raw = JSON.parse(result.stdout.trim().split('\n').at(-1) ?? '');
     } catch {
       throw new HttpError(502, 'YTDLP_FAILED', 'yt-dlp sent something that is not JSON.');
     }

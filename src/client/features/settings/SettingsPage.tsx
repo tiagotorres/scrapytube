@@ -1,10 +1,24 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
-import { ChevronRight, Download, Film, HardDrive, KeyRound, LogOut, Pencil, RefreshCw, Users } from 'lucide-react';
+import {
+  ChevronRight,
+  Cookie,
+  Download,
+  Film,
+  HardDrive,
+  KeyRound,
+  LogOut,
+  MoreVertical,
+  Pencil,
+  RefreshCw,
+  Trash2,
+  Upload,
+  Users,
+} from 'lucide-react';
 
-import { LANGUAGES } from '#shared/types.ts';
+import { LANGUAGES, MAX_COOKIES_LENGTH } from '#shared/types.ts';
 import type { Language, SessionInfo, SystemInfo, User } from '#shared/types.ts';
 
 import { api, errorMessage } from '@/api/client.ts';
@@ -14,7 +28,9 @@ import { Avatar } from '@/components/Avatar.tsx';
 import { Logo } from '@/components/Logo.tsx';
 import { PageBody, PageHeader } from '@/components/PageHeader.tsx';
 import { Button } from '@/components/ui/Button.tsx';
+import { confirm } from '@/components/ui/Confirm.tsx';
 import { PasswordField, SegmentedControl, TextField } from '@/components/ui/Field.tsx';
+import { Menu } from '@/components/ui/Menu.tsx';
 import { Section, Stack } from '@/components/ui/Misc.tsx';
 import { Sheet } from '@/components/ui/Sheet.tsx';
 import { useSystem } from '@/features/downloads/api.ts';
@@ -167,6 +183,104 @@ function PasswordSheet({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
   );
 }
 
+/**
+ * YouTube cookies, from a cookies.txt file: for when YouTube asks to confirm
+ * it isn't a bot. The cookies themselves never come back from the NAS.
+ */
+function CookiesRow({ info }: { info: SystemInfo | undefined }) {
+  const { t } = useTranslation();
+  const input = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const cookies = info?.cookies;
+
+  const store = (next: SystemInfo) => queryClient.setQueryData<SystemInfo>(keys.system, next);
+
+  const add = async (file: File) => {
+    if (file.size > MAX_COOKIES_LENGTH) {
+      showToast({ message: t('errors.INVALID_COOKIES'), tone: 'error' });
+      return;
+    }
+    setBusy(true);
+    try {
+      store(await api.put<SystemInfo>('/system/cookies', { text: await file.text() }));
+      showToast({ message: t('system.cookiesSaved') });
+    } catch (err) {
+      showToast({ message: errorMessage(err), tone: 'error' });
+    } finally {
+      setBusy(false);
+      // The same file can be picked again.
+      if (input.current) input.current.value = '';
+    }
+  };
+
+  const remove = async () => {
+    const ok = await confirm({
+      title: t('system.cookiesRemoveTitle'),
+      message: t('system.cookiesRemoveBody'),
+      confirmLabel: t('system.cookiesRemove'),
+      danger: true,
+    });
+    if (!ok) return;
+    try {
+      store(await api.delete<SystemInfo>('/system/cookies'));
+      showToast({ message: t('system.cookiesRemoved') });
+    } catch (err) {
+      showToast({ message: errorMessage(err), tone: 'error' });
+    }
+  };
+
+  const pick = () => input.current?.click();
+
+  return (
+    <>
+      <div className={styles.row}>
+        <Cookie size={20} className={styles.rowIcon} />
+        <span className={styles.rowLabel}>
+          {t('system.cookies')}
+          {cookies && (
+            <span className={styles.rowHint}>
+              {cookies.added && cookies.updatedAt
+                ? t('system.cookiesAdded', { when: relativeTime(Date.parse(cookies.updatedAt)) })
+                : t('system.cookiesNone')}
+            </span>
+          )}
+        </span>
+        {cookies?.added ? (
+          <Menu
+            label={t('system.cookies')}
+            trigger={<MoreVertical size={20} />}
+            entries={[
+              { id: 'replace', label: t('system.cookiesReplace'), icon: <Upload size={18} />, onAction: pick },
+              {
+                id: 'remove',
+                label: t('system.cookiesRemove'),
+                icon: <Trash2 size={18} />,
+                danger: true,
+                onAction: () => void remove(),
+              },
+            ]}
+          />
+        ) : (
+          <Button size="sm" variant="ghost" loading={busy} disabled={!info} icon={<Upload size={16} />} onClick={pick}>
+            {t('system.cookiesAdd')}
+          </Button>
+        )}
+        <input
+          ref={input}
+          type="file"
+          accept=".txt,text/plain"
+          hidden
+          onChange={event => {
+            const file = event.target.files?.[0];
+            if (file) void add(file);
+          }}
+        />
+      </div>
+      <p className={styles.rowNote}>{t('system.cookiesHint')}</p>
+    </>
+  );
+}
+
 /** yt-dlp and ffmpeg, which do the downloading, and the space left for it. */
 function DownloaderSection() {
   const { t } = useTranslation();
@@ -216,6 +330,7 @@ function DownloaderSection() {
           {t('system.lastCheck', { when: relativeTime(Date.parse(ytDlp.lastCheckedAt)), result: ytDlp.lastCheck })}
         </p>
       )}
+      <CookiesRow info={info} />
       <div className={styles.row}>
         <Film size={20} className={styles.rowIcon} />
         <span className={styles.rowLabel}>{t('system.ffmpeg')}</span>

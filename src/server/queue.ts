@@ -137,7 +137,7 @@ export class DownloadQueue {
     mkdirSync(folder, { recursive: true });
     mkdirSync(temp, { recursive: true });
 
-    const args = downloadArgs(this.tool.commonOptions(), {
+    const args = downloadArgs(this.tool.commonOptions(temp), {
       url: row.url,
       kind: row.kind,
       folder,

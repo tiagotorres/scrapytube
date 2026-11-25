@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { cleanName } from './text.ts';
-import { DOWNLOAD_KINDS, LANGUAGES } from './types.ts';
+import { DOWNLOAD_KINDS, LANGUAGES, MAX_COOKIES_LENGTH } from './types.ts';
 
 // Request bodies accepted by the API. The web app imports only the inferred
 // types (`import type`), so zod is never bundled into the browser code.
@@ -83,6 +83,12 @@ export const createDownloadSchema = z.object({
   overwrite: z.boolean().optional(),
 });
 export type CreateDownloadInput = z.input<typeof createDownloadSchema>;
+
+export const cookiesSchema = z.object({
+  /** The content of a cookies.txt file (Netscape format). */
+  text: z.string().min(1).max(MAX_COOKIES_LENGTH),
+});
+export type CookiesInput = z.input<typeof cookiesSchema>;
 
 export const createFolderSchema = z.object({
   parent: mediaPath,

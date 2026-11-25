@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 
-import { createFolderSchema } from '#shared/schemas.ts';
+import { cookiesSchema, createFolderSchema } from '#shared/schemas.ts';
 import type { SystemInfo } from '#shared/types.ts';
 
 import type { AppContext, AppEnv } from '../http.ts';
@@ -28,6 +28,7 @@ export function systemRoutes({ config, media, ytDlp }: AppContext) {
     version: config.version,
     ytDlp: ytDlp.status(),
     ffmpeg: { version: ytDlp.ffmpegVersion },
+    cookies: ytDlp.cookies.status(),
     media: media.space(),
     maxConcurrent: config.maxConcurrent,
   });
@@ -37,6 +38,18 @@ export function systemRoutes({ config, media, ytDlp }: AppContext) {
   /** Checks for a new yt-dlp, and installs it. */
   app.post('/update-ytdlp', async c => {
     await ytDlp.update();
+    return c.json(info());
+  });
+
+  /** Adds (or replaces) the YouTube cookies: a cookies.txt exported from a browser. */
+  app.put('/cookies', async c => {
+    const { text } = await readBody(c, cookiesSchema);
+    ytDlp.cookies.save(text);
+    return c.json(info());
+  });
+
+  app.delete('/cookies', c => {
+    ytDlp.cookies.remove();
     return c.json(info());
   });
 

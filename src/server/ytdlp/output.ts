@@ -96,6 +96,8 @@ export function errorMessage(stderr: string): string | null {
     .slice(0, 500);
 }
 
+export { isBotCheck } from '#shared/youtube.ts';
+
 /** The video can't be had (private, removed, age or region restricted…), as opposed to yt-dlp failing. */
 export function isUnavailable(message: string): boolean {
   return /unavailable|private video|removed|terminated|not available|members[- ]only|sign in to confirm your age|copyright|blocked/i.test(

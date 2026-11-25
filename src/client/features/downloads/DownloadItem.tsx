@@ -4,7 +4,7 @@ import clsx from 'clsx';
 import { Clapperboard, Download as DownloadIcon, ExternalLink, MoreVertical, Music, RotateCcw, Square, Trash2 } from 'lucide-react';
 
 import type { Download } from '#shared/types.ts';
-import { thumbnailUrl } from '#shared/youtube.ts';
+import { isBotCheck, thumbnailUrl } from '#shared/youtube.ts';
 
 import { errorMessage } from '@/api/client.ts';
 import { useMe } from '@/api/queries.ts';
@@ -40,10 +40,12 @@ function Status({ download }: { download: Download }) {
 
   if (status === 'queued') return <span className={styles.status}>{t('downloads.queued')}</span>;
   if (status === 'failed') {
+    // YouTube's "confirm you're not a bot" says where to add cookies, rather than yt-dlp's advice.
+    const reason = download.error && isBotCheck(download.error) ? t('errors.YOUTUBE_BOT_CHECK') : download.error;
     return (
       <span className={clsx(styles.status, styles.failed)} title={download.error ?? undefined}>
         {t('downloads.failed')}
-        {download.error && `: ${download.error}`}
+        {reason && `: ${reason}`}
       </span>
     );
   }
