@@ -1,6 +1,6 @@
 {
   "name": "scrapytube",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "description": "ScrapyTube – a mobile-first YouTube downloader (MP4 or MP3) run on a NAS.",
   "license": "MIT",
