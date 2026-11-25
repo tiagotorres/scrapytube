@@ -1,0 +1,138 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: var(--tap);
+  padding: 0 18px;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  user-select: none;
+  transition:
+    background var(--transition),
+    border-color var(--transition),
+    color var(--transition),
+    transform 80ms ease;
+}
+
+.link {
+  text-decoration: none;
+}
+
+.button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.primary {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+.primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+.primary:active:not(:disabled) {
+  background: var(--accent-pressed);
+}
+
+.secondary {
+  background: var(--surface);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+.secondary:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+.secondary:active:not(:disabled) {
+  background: var(--surface-pressed);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--text-muted);
+}
+.ghost:hover:not(:disabled) {
+  background: var(--surface-3);
+  color: var(--text);
+}
+.ghost:active:not(:disabled) {
+  background: var(--surface-pressed);
+}
+
+.soft {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+.soft:hover:not(:disabled) {
+  filter: brightness(0.97);
+}
+
+.danger {
+  background: var(--danger);
+  color: #fff;
+}
+.danger:hover:not(:disabled) {
+  background: var(--danger-hover);
+}
+
+.danger-soft {
+  background: var(--danger-soft);
+  color: var(--danger-text);
+}
+.danger-soft:hover:not(:disabled) {
+  filter: brightness(0.97);
+}
+
+.sm {
+  height: 34px;
+  padding: 0 12px;
+  font-size: 0.9rem;
+  gap: 6px;
+  border-radius: var(--radius-sm);
+}
+
+.lg {
+  height: 52px;
+  padding: 0 22px;
+  font-size: 1.05rem;
+  border-radius: var(--radius-lg);
+}
+
+.block {
+  width: 100%;
+}
+
+.icon {
+  width: var(--tap);
+  padding: 0;
+  flex-shrink: 0;
+}
+.icon.sm {
+  width: 34px;
+}
+.icon.lg {
+  width: 52px;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

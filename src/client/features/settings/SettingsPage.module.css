@@ -1,0 +1,134 @@
+.profile,
+.row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 0 16px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  text-decoration: none;
+  font-size: 1rem;
+}
+
+.profile {
+  min-height: 80px;
+}
+
+.row {
+  min-height: 54px;
+}
+
+.profile + .row,
+.row + .row {
+  border-top: 1px solid var(--border);
+}
+
+.profile:active,
+.row:active {
+  background: var(--surface-3);
+}
+
+.profileText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.profileName {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.profileMeta {
+  color: var(--text-subtle);
+}
+
+.rowIcon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.rowHint {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: var(--text-subtle);
+}
+
+.rowNote + .row {
+  border-top: 1px solid var(--border);
+}
+
+.rowNote {
+  margin: -10px 0 0;
+  padding: 0 16px 12px 50px;
+  font-size: 0.82rem;
+  color: var(--text-subtle);
+}
+
+.rowLabel {
+  flex: 1;
+  min-width: 0;
+  font-weight: 550;
+}
+
+.rowValue {
+  color: var(--text-subtle);
+  font-weight: 600;
+}
+
+.chevron {
+  color: var(--text-subtle);
+  flex-shrink: 0;
+}
+
+.danger,
+.danger .rowIcon {
+  color: var(--danger-text);
+}
+
+.control {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+}
+
+.control + .control {
+  border-top: 1px solid var(--border);
+}
+
+.controlLabel {
+  font-weight: 550;
+}
+
+.about {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 32px;
+  color: var(--text-muted);
+}
+
+.aboutName {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.aboutVersion {
+  font-size: 0.875rem;
+}
+
+.error {
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--danger-soft);
+  color: var(--danger-text);
+  font-weight: 500;
+}

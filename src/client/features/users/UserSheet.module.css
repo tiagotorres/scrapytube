@@ -1,0 +1,82 @@
+.back {
+  margin-left: -10px;
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.identityName {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.identityMeta {
+  color: var(--text-subtle);
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.action {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 0 16px;
+  border: none;
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  text-align: left;
+}
+
+.action + .action {
+  border-top: 1px solid var(--border);
+}
+
+.action:active {
+  background: var(--surface-3);
+}
+
+.danger {
+  color: var(--danger-text);
+}
+
+.hint {
+  padding: 12px 16px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.actions .hint {
+  border-top: 1px solid var(--border);
+}
+
+.error {
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--danger-soft);
+  color: var(--danger-text);
+  font-weight: 500;
+}

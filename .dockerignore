@@ -1,0 +1,15 @@
+**/node_modules
+**/dist
+**/*.tsbuildinfo
+**/coverage
+.git
+.claude
+data
+data-*
+scrapytube.tar
+scrapytube.tar.gz
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+media

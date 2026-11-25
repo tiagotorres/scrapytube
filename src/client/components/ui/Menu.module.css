@@ -1,0 +1,89 @@
+.popover {
+  min-width: 230px;
+  max-width: calc(100vw - 24px);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  overflow: auto;
+  outline: none;
+}
+
+.popover[data-entering] {
+  animation: appear 140ms var(--ease);
+}
+
+.menu {
+  padding: 6px;
+  outline: none;
+}
+
+.section {
+  display: contents;
+}
+
+.heading {
+  padding: 8px 12px 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 12px 0 8px;
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+}
+
+.item[data-focused],
+.item[data-pressed] {
+  background: var(--surface-3);
+}
+
+.item[data-disabled] {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.danger {
+  color: var(--danger-text);
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  color: var(--accent-text);
+}
+
+.danger .icon {
+  color: inherit;
+}
+
+.label {
+  flex: 1;
+  min-width: 0;
+}
+
+.separator {
+  height: 1px;
+  margin: 6px 4px;
+  background: var(--border);
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}

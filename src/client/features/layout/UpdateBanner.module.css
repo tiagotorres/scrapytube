@@ -1,0 +1,32 @@
+.banner {
+  position: fixed;
+  z-index: 150;
+  top: calc(var(--safe-top) + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: max-content;
+  max-width: calc(100% - 24px);
+  padding: 6px 6px 6px 16px;
+  border-radius: var(--radius-pill);
+  background: var(--toast-bg);
+  color: #f2f5f1;
+  font-size: 0.9rem;
+  box-shadow: var(--shadow-lg);
+}
+
+.reload {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 700;
+  white-space: nowrap;
+}

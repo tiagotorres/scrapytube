@@ -1,0 +1,145 @@
+.trail {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  white-space: nowrap;
+  margin: 0 -4px;
+  padding: 2px 4px;
+}
+
+.trail::-webkit-scrollbar {
+  display: none;
+}
+
+.crumbGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.crumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 10px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.crumb:active {
+  background: var(--surface-3);
+}
+
+.crumb[aria-current] {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.separator {
+  flex-shrink: 0;
+  color: var(--text-subtle);
+}
+
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 32px 0;
+}
+
+.error {
+  padding: 16px 4px;
+  color: var(--danger-text);
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.list li + li {
+  border-top: 1px solid var(--border);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  padding: 0 14px;
+  border: none;
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  font-size: 1rem;
+}
+
+.row:active {
+  background: var(--surface-3);
+}
+
+@media (hover: hover) {
+  .row:hover {
+    background: var(--surface-2);
+  }
+}
+
+.icon {
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+.name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--text-subtle);
+}
+
+.empty {
+  padding: 16px 14px;
+  color: var(--text-subtle);
+  background: var(--surface);
+}
+
+.newFolder {
+  align-self: flex-start;
+}
+
+.create {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.createActions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}

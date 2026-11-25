@@ -1,0 +1,80 @@
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 48px 0;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.list li + li {
+  border-top: 1px solid var(--border);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 68px;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  text-align: left;
+}
+
+.row:active {
+  background: var(--surface-3);
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 650;
+  font-size: 1.02rem;
+}
+
+.you {
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.meta {
+  font-size: 0.875rem;
+  color: var(--text-subtle);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chevron {
+  color: var(--text-subtle);
+  flex-shrink: 0;
+}
+
+.note {
+  margin: 14px 4px 20px;
+  font-size: 0.875rem;
+  color: var(--text-subtle);
+  line-height: 1.45;
+}

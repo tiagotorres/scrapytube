@@ -1,0 +1,249 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.hint,
+.error {
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+
+.hint {
+  color: var(--text-subtle);
+}
+
+.error {
+  color: var(--danger-text);
+  font-weight: 500;
+}
+
+.control {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  transition:
+    border-color var(--transition),
+    box-shadow var(--transition);
+}
+
+.control:focus-within {
+  border-color: var(--accent);
+  box-shadow: var(--focus-ring);
+}
+
+.control.invalid {
+  border-color: var(--danger);
+}
+
+.icon {
+  display: flex;
+  padding-left: 14px;
+  color: var(--text-subtle);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  height: 46px;
+  padding: 0 14px;
+  border: none;
+  background: transparent;
+  font-size: 1rem;
+  outline: none;
+  box-shadow: none;
+  border-radius: var(--radius);
+}
+
+.input::placeholder {
+  color: var(--text-subtle);
+}
+
+/* Search fields get our own clear button. */
+.input::-webkit-search-cancel-button,
+.input::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+
+.icon + .input {
+  padding-left: 10px;
+}
+
+.multiline {
+  align-items: stretch;
+}
+
+.textarea {
+  height: auto;
+  min-height: 46px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  resize: vertical;
+  line-height: 1.4;
+}
+
+/* iOS shows an empty date input with no height and no placeholder. */
+.date {
+  -webkit-appearance: none;
+  appearance: none;
+  display: flex;
+  align-items: center;
+  min-height: 46px;
+  text-align: left;
+}
+
+.date::-webkit-date-and-time-value {
+  text-align: left;
+}
+
+.date.empty {
+  color: var(--text-subtle);
+}
+
+.inlineButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-right: 2px;
+  border: none;
+  background: transparent;
+  color: var(--text-subtle);
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.inlineButton:hover {
+  color: var(--text);
+}
+
+.segmented {
+  display: flex;
+  padding: 3px;
+  gap: 3px;
+  border-radius: var(--radius);
+  background: var(--surface-3);
+}
+
+.segment {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 40px;
+  padding: 0 12px;
+  border: none;
+  border-radius: calc(var(--radius) - 3px);
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition:
+    background var(--transition),
+    color var(--transition);
+}
+
+.segment[aria-checked='true'] {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
+.segment:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+/* ToggleField: a label and a switch on one row. */
+
+.toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 56px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: var(--surface-3);
+  cursor: pointer;
+}
+
+.toggleDisabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.toggleText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.toggleLabel {
+  font-weight: 600;
+}
+
+.toggleHint {
+  font-size: 0.85rem;
+  line-height: 1.35;
+  color: var(--text-subtle);
+}
+
+/* The real checkbox stays for keyboards and screen readers. */
+.toggleInput {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.toggleTrack {
+  position: relative;
+  flex-shrink: 0;
+  width: 48px;
+  height: 28px;
+  border-radius: var(--radius-pill);
+  background: var(--border-strong);
+  transition: background var(--transition);
+}
+
+.toggleTrack::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+  transition: transform var(--transition);
+}
+
+.toggleInput:checked + .toggleTrack {
+  background: var(--accent);
+}
+
+.toggleInput:checked + .toggleTrack::after {
+  transform: translateX(20px);
+}
+
+.toggleInput:focus-visible + .toggleTrack {
+  box-shadow: var(--focus-ring);
+}
