@@ -10,8 +10,8 @@
     {
       "name": "prod",
       "runtimeExecutable": "bash",
-      "runtimeArgs": ["-c", "DATA_DIR=./data-prod MEDIA_DIR=./media PORT=5111 exec node src/server/main.ts"],
-      "port": 5111
+      "runtimeArgs": ["-c", "DATA_DIR=./data-prod MEDIA_DIR=./media PORT=5112 exec node src/server/main.ts"],
+      "port": 5112
     }
   ]
 }

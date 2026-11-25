@@ -1,4 +1,4 @@
-// Development: runs the API server (port 5011, or API_PORT; restarted when
+// Development: runs the API server (port 5012, or API_PORT; restarted when
 // its code changes) and the Vite dev server (http://localhost:5173) together.
 //
 //   yarn dev          both
@@ -14,7 +14,7 @@ const root = path.resolve(import.meta.dirname, '..');
 const which = process.argv[2] ?? 'all';
 // PORT may be set for the web app by whatever starts this script, so the
 // API server gets its own variable.
-const apiPort = process.env.API_PORT || '5011';
+const apiPort = process.env.API_PORT || '5012';
 const children: ChildProcess[] = [];
 
 const run = (args: string[], env: Record<string, string>) =>

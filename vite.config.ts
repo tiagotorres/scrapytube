@@ -15,8 +15,8 @@ const { version } = JSON.parse(
 ) as { version: string };
 
 // In development the web app runs on Vite (port 5173) and sends API calls to
-// the server (port 5011, or API_PORT; `yarn dev` starts both).
-const serverUrl = `http://localhost:${process.env.API_PORT || 5011}`;
+// the server (port 5012, or API_PORT; `yarn dev` starts both).
+const serverUrl = `http://localhost:${process.env.API_PORT || 5012}`;
 
 /**
  * Writes Brotli and gzip copies of the built files, so the server can send

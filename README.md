@@ -63,11 +63,11 @@ services:
       - /volume1/docker/scrapytube/data:/data:rw
       - /volume1/media:/media:rw
     ports:
-      - 5011:5011
+      - 5012:5012
     restart: unless-stopped
 ```
 
-Open `http://<nas-address>:5011` and create the first account. That person can
+Open `http://<nas-address>:5012` and create the first account. That person can
 add everyone else in *Settings → People*.
 
 If nobody can sign in anymore, give someone a new password:
@@ -79,11 +79,11 @@ sudo docker exec scrapytube node src/server/cli/reset-password.ts <username>
 ### HTTPS with Tailscale (to install it as an app)
 
 Browsers only install a web app, and let it receive shared links, over HTTPS
-(or on `localhost`). Over plain `http://nas:5011` ScrapyTube works in the
+(or on `localhost`). Over plain `http://nas:5012` ScrapyTube works in the
 browser, but can't be installed. Serve it over HTTPS on your tailnet:
 
 ```bash
-tailscale serve --bg --https=8447 http://127.0.0.1:5011
+tailscale serve --bg --https=8447 http://127.0.0.1:5012
 ```
 
 Then open `https://<nas-name>.<tailnet>.ts.net:8447` on the phone, sign in, and
@@ -116,7 +116,7 @@ Environment variables of the container:
 
 | Variable | Default | What it does |
 | --- | --- | --- |
-| `PORT` | `5011` | Port inside the container |
+| `PORT` | `5012` | Port inside the container |
 | `DATA_DIR` | `/data` | ScrapyTube's own folder |
 | `MEDIA_DIR` | `/media` | Where downloads are saved |
 | `PUID`, `PGID` | (root) | The user and group that run ScrapyTube and own what it saves |
@@ -175,7 +175,7 @@ start.
 
 ```bash
 yarn install
-yarn dev              # the API on :5011 and the web app on http://localhost:5173
+yarn dev              # the API on :5012 and the web app on http://localhost:5173
 ```
 
 Data is kept in `./data`, downloads in `./media`.
@@ -186,7 +186,7 @@ Data is kept in `./data`, downloads in `./media`.
 | `yarn test` | The tests (server, shared code and web app) |
 | `yarn typecheck` | `tsc -b`, strict |
 | `yarn build` | Builds the web app and its service worker into `dist/client` |
-| `yarn serve` | Builds, then serves everything on :5011 with `./data` and `./media` |
+| `yarn serve` | Builds, then serves everything on :5012 with `./data` and `./media` |
 | `yarn icons` | Redraws the icons in `public/` from the logo's geometry (`src/client/components/mark.ts`) |
 | `yarn docker:build` | Builds `scrapytube.tar` for the NAS |
 

@@ -64,7 +64,7 @@ function channelFromEnv(): string {
 
 export function loadConfig(): Config {
   return {
-    port: intFromEnv('PORT', 5011, 1, 65535),
+    port: intFromEnv('PORT', 5012, 1, 65535),
     dataDir: path.resolve(process.env.DATA_DIR || path.join(rootDir, 'data')),
     mediaDir: path.resolve(process.env.MEDIA_DIR || path.join(rootDir, 'media')),
     sessionDays: intFromEnv('SESSION_DAYS', 180, 1),

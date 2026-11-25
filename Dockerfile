@@ -7,7 +7,7 @@
 # build carries its own Python: nothing is compiled for the NAS's processor.
 #
 #   docker build -t scrapytube .
-#   docker run -d -p 5011:5011 -v ./data:/data -v ./media:/media scrapytube
+#   docker run -d -p 5012:5012 -v ./data:/data -v ./media:/media scrapytube
 
 ARG NODE_VERSION=24
 
@@ -78,7 +78,7 @@ RUN apt-get update \
 WORKDIR /app
 
 ENV NODE_ENV=production \
-    PORT=5011 \
+    PORT=5012 \
     DATA_DIR=/data \
     MEDIA_DIR=/media \
     YTDLP_BUNDLED=/opt/yt-dlp/yt-dlp
@@ -95,10 +95,10 @@ RUN mkdir -p /data /media
 # /data: the database, ScrapyTube's own yt-dlp, and downloads in progress (back it up).
 # /media: where the videos and music are saved.
 VOLUME ["/data", "/media"]
-EXPOSE 5011
+EXPOSE 5012
 
 HEALTHCHECK --interval=60s --timeout=5s --start-period=60s --retries=3 \
-    CMD ["node", "-e", "fetch('http://127.0.0.1:' + (process.env.PORT || 5011) + '/api/health').then(r => process.exit(r.ok ? 0 : 1), () => process.exit(1))"]
+    CMD ["node", "-e", "fetch('http://127.0.0.1:' + (process.env.PORT || 5012) + '/api/health').then(r => process.exit(r.ok ? 0 : 1), () => process.exit(1))"]
 
 LABEL org.opencontainers.image.title="ScrapyTube" \
       org.opencontainers.image.description="Saves YouTube videos (MP4) and music (MP3) to a NAS, from a phone." \
