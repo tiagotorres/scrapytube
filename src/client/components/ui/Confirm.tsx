@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { createStore, useStore } from '@/lib/store.ts';
 
 import { Button } from './Button.tsx';
-import { ToggleField } from './Field.tsx';
+import { CheckboxField } from './Field.tsx';
 import { Sheet } from './Sheet.tsx';
 import styles from './Misc.module.css';
 
@@ -14,8 +14,9 @@ type ConfirmRequest = {
   message?: ReactNode;
   confirmLabel: string;
   danger?: boolean;
-  /** A switch shown under the message (on at first), e.g. to do something more on confirm. */
+  /** A checkbox shown under the message (off at first), e.g. to do something more on confirm. */
   option?: string;
+  optionHint?: string;
   /** Called with null when cancelled, or whether the option is on. */
   resolve: (answer: { option: boolean } | null) => void;
 };
@@ -27,7 +28,7 @@ export function confirm(options: Omit<ConfirmRequest, 'resolve' | 'option'>): Pr
   return new Promise(resolve => request.set({ ...options, resolve: answer => resolve(answer !== null) }));
 }
 
-/** Asks the person to confirm, with a switch; resolves with null when cancelled. */
+/** Asks the person to confirm, with a checkbox; resolves with null when cancelled. */
 export function confirmWithOption(
   options: Omit<ConfirmRequest, 'resolve'> & { option: string },
 ): Promise<{ option: boolean } | null> {
@@ -37,9 +38,9 @@ export function confirmWithOption(
 export function ConfirmHost() {
   const { t } = useTranslation();
   const current = useStore(request);
-  const [option, setOption] = useState(true);
+  const [option, setOption] = useState(false);
 
-  useEffect(() => setOption(true), [current]);
+  useEffect(() => setOption(false), [current]);
 
   const finish = (confirmed: boolean) => {
     current?.resolve(confirmed ? { option } : null);
@@ -62,7 +63,9 @@ export function ConfirmHost() {
       }
     >
       {current?.message && <p className={styles.confirmMessage}>{current.message}</p>}
-      {current?.option && <ToggleField label={current.option} checked={option} onChange={setOption} />}
+      {current?.option && (
+        <CheckboxField label={current.option} hint={current.optionHint} checked={option} onChange={setOption} />
+      )}
     </Sheet>
   );
 }

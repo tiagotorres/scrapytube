@@ -5,7 +5,7 @@ import { Readable } from 'node:stream';
 import { Hono } from 'hono';
 
 import { downloadPath } from '#shared/paths.ts';
-import { createDownloadSchema, probeSchema } from '#shared/schemas.ts';
+import { createDownloadSchema, probeSchema, removeDownloadsSchema } from '#shared/schemas.ts';
 import type { VideoInfo } from '#shared/types.ts';
 import { parseVideoLink } from '#shared/youtube.ts';
 
@@ -15,7 +15,8 @@ import { idParam, readBody, userId } from '../http.ts';
 import {
   activeForFile,
   clearFinished,
-  deleteDownload,
+  deleteDownloadsOfFiles,
+  findDownload,
   insertDownload,
   lastChoices,
   listDownloads,
@@ -113,12 +114,33 @@ export function downloadRoutes(ctx: AppContext) {
     return c.body(null, 204);
   });
 
+  /**
+   * Removes downloads from the list, and with `deleteFiles` their files too,
+   * along with every other download in the list that saved to those files.
+   * Downloads already gone are left out.
+   */
+  const remove = (ids: number[], deleteFiles: boolean) => {
+    const rows = ids.map(id => findDownload(db, id)).filter(row => row !== undefined);
+    if (rows.some(row => row.status === 'queued' || row.status === 'running')) throw new HttpError(409, 'DOWNLOAD_ACTIVE');
+    const files = deleteFiles ? [...new Set(rows.map(row => row.file_path))] : [];
+    // Never delete a file that is being downloaded again.
+    if (files.some(file => activeForFile(db, file))) throw new HttpError(409, 'DOWNLOAD_ACTIVE');
+    let filesDeleted = 0;
+    for (const file of files) if (media.deleteFile(file)) filesDeleted++;
+    const removed = rows.length ? deleteDownloadsOfFiles(db, rows.map(row => row.id), files) : 0;
+    return { removed, filesDeleted };
+  };
+
+  app.post('/remove', async c => {
+    const { ids, deleteFiles } = await readBody(c, removeDownloadsSchema);
+    return c.json(remove(ids, deleteFiles));
+  });
+
   /** Removes a download from the list; the file stays. */
   app.delete('/:id', c => {
     const id = idParam(c);
-    const row = requireDownload(db, id);
-    if (row.status === 'queued' || row.status === 'running') throw new HttpError(409, 'DOWNLOAD_ACTIVE');
-    deleteDownload(db, id);
+    requireDownload(db, id);
+    remove([id], false);
     return c.body(null, 204);
   });
 

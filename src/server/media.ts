@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readdirSync, realpathSync, statSync, statfsSync } from 'node:fs';
+import { existsSync, lstatSync, mkdirSync, readdirSync, realpathSync, rmSync, statSync, statfsSync } from 'node:fs';
 import path from 'node:path';
 
 import { checkFolderName, joinPath, splitMediaPath } from '#shared/paths.ts';
@@ -57,6 +57,20 @@ export class MediaFolder {
 
   exists(relative: string): boolean {
     return existsSync(this.resolve(relative));
+  }
+
+  /** Deletes a file (never a folder); false if it was already gone. */
+  deleteFile(relative: string): boolean {
+    const absolute = this.resolve(relative);
+    let stats;
+    try {
+      stats = lstatSync(absolute);
+    } catch {
+      return false;
+    }
+    if (stats.isDirectory()) throw badRequest('Not a file.');
+    rmSync(absolute, { force: true });
+    return true;
   }
 
   /** The folders in a folder, by name (hidden ones left out). */

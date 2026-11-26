@@ -3,7 +3,7 @@ import type { InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from 'rea
 import { useTranslation } from 'react-i18next';
 
 import clsx from 'clsx';
-import { Eye, EyeOff, X } from 'lucide-react';
+import { Check, Eye, EyeOff, X } from 'lucide-react';
 
 import styles from './Field.module.css';
 
@@ -261,6 +261,36 @@ export function ToggleField({ label, hint, checked, onChange, disabled }: Toggle
         onChange={event => onChange(event.target.checked)}
       />
       <span className={styles.toggleTrack} aria-hidden />
+    </label>
+  );
+}
+
+export type CheckboxFieldProps = {
+  label: ReactNode;
+  hint?: ReactNode;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+};
+
+/** A checkbox with its label, and a hint under it. */
+export function CheckboxField({ label, hint, checked, onChange }: CheckboxFieldProps) {
+  const id = useId();
+  return (
+    <label htmlFor={id} className={styles.toggle}>
+      <input
+        id={id}
+        type="checkbox"
+        className={styles.toggleInput}
+        checked={checked}
+        onChange={event => onChange(event.target.checked)}
+      />
+      <span className={styles.checkbox} aria-hidden>
+        <Check size={16} strokeWidth={3} />
+      </span>
+      <span className={styles.toggleText}>
+        <span className={styles.toggleLabel}>{label}</span>
+        {hint && <span className={styles.toggleHint}>{hint}</span>}
+      </span>
     </label>
   );
 }

@@ -32,6 +32,19 @@
   margin-top: 24px;
 }
 
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 36px;
+  margin-bottom: 4px;
+}
+
+.sectionHead .sectionTitle {
+  margin-bottom: 0;
+}
+
 .sectionTitle {
   margin: 0 4px 8px;
   font-size: 0.8rem;

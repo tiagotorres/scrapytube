@@ -84,6 +84,13 @@ export const createDownloadSchema = z.object({
 });
 export type CreateDownloadInput = z.input<typeof createDownloadSchema>;
 
+export const removeDownloadsSchema = z.object({
+  ids: z.array(z.number().int().positive()).min(1).max(1000),
+  /** Also delete their files from the media folder. */
+  deleteFiles: z.boolean(),
+});
+export type RemoveDownloadsInput = z.input<typeof removeDownloadsSchema>;
+
 export const cookiesSchema = z.object({
   /** The content of a cookies.txt file (Netscape format). */
   text: z.string().min(1).max(MAX_COOKIES_LENGTH),
