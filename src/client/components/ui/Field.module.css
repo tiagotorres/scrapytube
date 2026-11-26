@@ -247,3 +247,31 @@
 .toggleInput:focus-visible + .toggleTrack {
   box-shadow: var(--focus-ring);
 }
+
+/* CheckboxField: a box, then the label, on one row (shares .toggle). */
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  border: 2px solid var(--border-strong);
+  background: var(--surface);
+  color: transparent;
+  transition:
+    background var(--transition),
+    border-color var(--transition);
+}
+
+.toggleInput:checked + .checkbox {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+.toggleInput:focus-visible + .checkbox {
+  box-shadow: var(--focus-ring);
+}

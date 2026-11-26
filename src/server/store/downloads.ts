@@ -143,8 +143,14 @@ export function requeueInterrupted(db: Database): number {
   return Number(db.prepare(`UPDATE downloads SET status = 'queued', started_at = NULL WHERE status = 'running'`).run().changes);
 }
 
-export function deleteDownload(db: Database, id: number) {
-  db.prepare('DELETE FROM downloads WHERE id = ?').run(id);
+/** Removes downloads from the list, and every other one that saved to one of these files. */
+export function deleteDownloadsOfFiles(db: Database, ids: number[], filePaths: string[]): number {
+  const marks = (list: unknown[]) => list.map(() => '?').join(', ');
+  return Number(
+    db
+      .prepare(`DELETE FROM downloads WHERE id IN (${marks(ids)})${filePaths.length ? ` OR file_path IN (${marks(filePaths)})` : ''}`)
+      .run(...ids, ...filePaths).changes,
+  );
 }
 
 /** Removes the finished downloads from the list (the files stay). */

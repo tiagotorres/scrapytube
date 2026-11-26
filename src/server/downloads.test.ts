@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
@@ -187,6 +187,65 @@ describe('downloading', () => {
     expect(file.headers.get('content-type')).toBe('audio/mpeg');
     expect(file.headers.get('content-disposition')).toContain("filename*=UTF-8''Video%20abcdefghijk.mp3");
     expect(await file.text()).toBe('video bytes');
+  });
+});
+
+describe('removing downloads', () => {
+  const music = { url: LINK, kind: 'music', folder: '', channelFolder: false };
+
+  it('keeps the file unless asked to delete it', async () => {
+    const { client, mediaDir } = await setUpApp({ runner: fakeYtDlp().runner });
+    const res = await client.post<Download>('/api/downloads', music);
+    await waitFor(client, res.body.id, ['done']);
+
+    const kept = await client.post('/api/downloads/remove', { ids: [res.body.id], deleteFiles: false });
+    expect(kept.body).toEqual({ removed: 1, filesDeleted: 0 });
+    expect(existsSync(path.join(mediaDir, 'Video abcdefghijk.mp3'))).toBe(true);
+    expect((await client.get<Download[]>('/api/downloads')).body).toEqual([]);
+  });
+
+  it('deletes the file, and every download saved to it', async () => {
+    const { client, mediaDir } = await setUpApp({ runner: fakeYtDlp().runner });
+    const first = await client.post<Download>('/api/downloads', music);
+    await waitFor(client, first.body.id, ['done']);
+    const again = await client.post<Download>('/api/downloads', { ...music, overwrite: true });
+    await waitFor(client, again.body.id, ['done']);
+    const other = await client.post<Download>('/api/downloads', { ...music, url: 'https://youtu.be/bbbbbbbbbbb' });
+    await waitFor(client, other.body.id, ['done']);
+
+    const res = await client.post('/api/downloads/remove', { ids: [first.body.id], deleteFiles: true });
+    expect(res.body).toEqual({ removed: 2, filesDeleted: 1 });
+    expect(existsSync(path.join(mediaDir, 'Video abcdefghijk.mp3'))).toBe(false);
+    expect((await client.get<Download[]>('/api/downloads')).body.map(item => item.id)).toEqual([other.body.id]);
+  });
+
+  it('removes several at once, even when a file is already gone', async () => {
+    const { client, mediaDir } = await setUpApp({ runner: fakeYtDlp().runner });
+    const first = await client.post<Download>('/api/downloads', music);
+    const second = await client.post<Download>('/api/downloads', { ...music, url: 'https://youtu.be/bbbbbbbbbbb' });
+    await waitFor(client, first.body.id, ['done']);
+    await waitFor(client, second.body.id, ['done']);
+    rmSync(path.join(mediaDir, 'Video abcdefghijk.mp3'));
+
+    const res = await client.post('/api/downloads/remove', { ids: [first.body.id, second.body.id, 999], deleteFiles: true });
+    expect(res.body).toEqual({ removed: 2, filesDeleted: 1 });
+    expect(existsSync(path.join(mediaDir, 'Video bbbbbbbbbbb.mp3'))).toBe(false);
+    expect((await client.get<Download[]>('/api/downloads')).body).toEqual([]);
+  });
+
+  it('refuses while a download, or one saving to the same file, is running', async () => {
+    const { client, mediaDir } = await setUpApp(); // yt-dlp never finishes
+    const running = await client.post<Download>('/api/downloads', music);
+    expect((await client.post('/api/downloads/remove', { ids: [running.body.id], deleteFiles: false })).body.error).toBe(
+      'DOWNLOAD_ACTIVE',
+    );
+    await client.post(`/api/downloads/${running.body.id}/cancel`);
+    writeFileSync(path.join(mediaDir, 'Video abcdefghijk.mp3'), 'old');
+    await client.post<Download>('/api/downloads', { ...music, overwrite: true });
+
+    const res = await client.post('/api/downloads/remove', { ids: [running.body.id], deleteFiles: true });
+    expect(res.body.error).toBe('DOWNLOAD_ACTIVE');
+    expect(existsSync(path.join(mediaDir, 'Video abcdefghijk.mp3'))).toBe(true);
   });
 });
 

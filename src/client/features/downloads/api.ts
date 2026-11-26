@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import type { CreateDownloadInput } from '#shared/schemas.ts';
-import type { Download, FolderListing, LastChoices, SystemInfo, VideoInfo } from '#shared/types.ts';
+import type { Download, FolderListing, LastChoices, RemoveDownloadsResult, SystemInfo, VideoInfo } from '#shared/types.ts';
 
 import { api } from '@/api/client.ts';
 import { keys, queryClient } from '@/api/query-client.ts';
@@ -81,9 +81,12 @@ export async function retryDownload(id: number) {
   void queryClient.invalidateQueries({ queryKey: keys.downloads, exact: true });
 }
 
-export async function removeDownload(id: number) {
-  await api.delete(`/downloads/${id}`);
-  queryClient.setQueryData<Download[]>(keys.downloads, list => list?.filter(item => item.id !== id));
+/** Removes downloads from the list, and with `deleteFiles` their files (and the other downloads saved to them). */
+export async function removeDownloads(ids: number[], deleteFiles: boolean): Promise<RemoveDownloadsResult> {
+  const result = await api.post<RemoveDownloadsResult>('/downloads/remove', { ids, deleteFiles });
+  queryClient.setQueryData<Download[]>(keys.downloads, list => list?.filter(item => !ids.includes(item.id)));
+  void queryClient.invalidateQueries({ queryKey: keys.downloads, exact: true });
+  return result;
 }
 
 export async function clearFinished() {

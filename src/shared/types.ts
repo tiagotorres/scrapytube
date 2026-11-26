@@ -128,6 +128,12 @@ export interface Download {
 }
 
 /** The folder and option last used for each kind, by the signed-in user. */
+/** What removing downloads did (more may leave the list than asked, when they shared a deleted file). */
+export interface RemoveDownloadsResult {
+  removed: number;
+  filesDeleted: number;
+}
+
 export type LastChoices = Record<DownloadKind, { folder: string } | null>;
 
 export interface Folder {

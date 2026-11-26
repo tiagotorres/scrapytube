@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { ClipboardPaste, Download as DownloadIcon, Link2, ListX, MoreVertical } from 'lucide-react';
+import { ClipboardPaste, Download as DownloadIcon, Link2, ListChecks, ListX, MoreVertical, Trash2 } from 'lucide-react';
 
 import type { Download } from '#shared/types.ts';
 import { parseVideoLink } from '#shared/youtube.ts';
@@ -10,15 +10,15 @@ import { parseVideoLink } from '#shared/youtube.ts';
 import { errorMessage } from '@/api/client.ts';
 import { PageBody, PageHeader } from '@/components/PageHeader.tsx';
 import { Button } from '@/components/ui/Button.tsx';
-import { confirm } from '@/components/ui/Confirm.tsx';
+import { confirm, confirmWithOption } from '@/components/ui/Confirm.tsx';
 import { TextField } from '@/components/ui/Field.tsx';
 import { Menu } from '@/components/ui/Menu.tsx';
 import { EmptyState, Spinner } from '@/components/ui/Misc.tsx';
 import { useNewDownloadSheet } from '@/lib/sheets.ts';
 import { showToast } from '@/lib/toasts.ts';
 
-import { clearFinished, useDownloads } from './api.ts';
-import { DownloadItem } from './DownloadItem.tsx';
+import { clearFinished, removeDownloads, useDownloads } from './api.ts';
+import { DownloadItem, removedMessage } from './DownloadItem.tsx';
 import styles from './DownloadsPage.module.css';
 import { NewDownloadSheet } from './NewDownloadSheet.tsx';
 
@@ -97,14 +97,31 @@ function LinkBox() {
   );
 }
 
-function DownloadList({ title, downloads }: { title: string; downloads: Download[] }) {
+type Selecting = { selected: Set<number>; onToggle: (id: number) => void; onToggleAll: () => void };
+
+function DownloadList({ title, downloads, selecting }: { title: string; downloads: Download[]; selecting?: Selecting }) {
+  const { t } = useTranslation();
   if (downloads.length === 0) return null;
+  const allSelected = selecting !== undefined && downloads.every(download => selecting.selected.has(download.id));
   return (
     <section className={styles.section}>
-      <h2 className={styles.sectionTitle}>{title}</h2>
+      <div className={styles.sectionHead}>
+        <h2 className={styles.sectionTitle}>{title}</h2>
+        {selecting && (
+          <Button variant="ghost" size="sm" onClick={selecting.onToggleAll} aria-pressed={allSelected}>
+            {allSelected ? t('downloads.selectNone') : t('downloads.selectAll')}
+          </Button>
+        )}
+      </div>
       <ul className={styles.list}>
         {downloads.map(download => (
-          <DownloadItem key={download.id} download={download} />
+          <DownloadItem
+            key={download.id}
+            download={download}
+            selection={
+              selecting && { selected: selecting.selected.has(download.id), onToggle: () => selecting.onToggle(download.id) }
+            }
+          />
         ))}
       </ul>
     </section>
@@ -120,6 +137,44 @@ export function DownloadsPage() {
     .filter(download => download.status === 'running' || download.status === 'queued')
     .sort((a, b) => (a.status === b.status ? a.id - b.id : a.status === 'running' ? -1 : 1));
   const finished = all.filter(download => download.status !== 'running' && download.status !== 'queued');
+
+  // Choosing finished downloads to remove at once (null when not choosing).
+  const [chosen, setChosen] = useState<Set<number> | null>(null);
+  const selecting = chosen !== null && finished.length > 0;
+  // Those still in the list (others may have removed some meanwhile).
+  const selected = new Set(finished.filter(download => chosen?.has(download.id)).map(download => download.id));
+  const [removing, setRemoving] = useState(false);
+
+  const toggle = (id: number) =>
+    setChosen(current => {
+      const next = new Set(current);
+      if (!next.delete(id)) next.add(id);
+      return next;
+    });
+  const toggleAll = () =>
+    setChosen(selected.size === finished.length ? new Set() : new Set(finished.map(download => download.id)));
+
+  const removeSelected = async () => {
+    const answer = await confirmWithOption({
+      title: t('downloads.removeSelectedTitle', { count: selected.size }),
+      message: t('downloads.removeSelectedBody'),
+      option: t('downloads.alsoDeleteFiles'),
+      optionHint: t('downloads.alsoDeleteFilesHint'),
+      confirmLabel: t('common.remove'),
+      danger: true,
+    });
+    if (!answer) return;
+    setRemoving(true);
+    try {
+      const result = await removeDownloads([...selected], answer.option);
+      setChosen(null);
+      showToast({ message: removedMessage(t, result.removed, answer.option) });
+    } catch (err) {
+      showToast({ message: errorMessage(err), tone: 'error' });
+    } finally {
+      setRemoving(false);
+    }
+  };
 
   const clear = async () => {
     const ok = await confirm({
@@ -139,21 +194,44 @@ export function DownloadsPage() {
   return (
     <>
       <PageHeader
-        title={t('downloads.title')}
+        title={selecting ? t('downloads.selected', { count: selected.size }) : t('downloads.title')}
         actions={
-          finished.length > 0 && (
-            <Menu
-              label={t('downloads.actions')}
-              trigger={<MoreVertical size={22} />}
-              entries={[
-                { id: 'clear', label: t('downloads.clearList'), icon: <ListX size={18} />, onAction: () => void clear() },
-              ]}
-            />
+          selecting ? (
+            <>
+              <Button variant="ghost" onClick={() => setChosen(null)}>
+                {t('common.cancel')}
+              </Button>
+              <Button
+                variant="danger"
+                icon={<Trash2 size={18} />}
+                disabled={selected.size === 0}
+                loading={removing}
+                onClick={() => void removeSelected()}
+              >
+                {t('common.remove')}
+              </Button>
+            </>
+          ) : (
+            finished.length > 0 && (
+              <Menu
+                label={t('downloads.actions')}
+                trigger={<MoreVertical size={22} />}
+                entries={[
+                  {
+                    id: 'select',
+                    label: t('downloads.select'),
+                    icon: <ListChecks size={18} />,
+                    onAction: () => setChosen(new Set()),
+                  },
+                  { id: 'clear', label: t('downloads.clearList'), icon: <ListX size={18} />, onAction: () => void clear() },
+                ]}
+              />
+            )
           )
         }
       />
       <PageBody>
-        <LinkBox />
+        {!selecting && <LinkBox />}
         {downloads.isPending ? (
           <div className={styles.loading}>
             <Spinner />
@@ -166,8 +244,12 @@ export function DownloadsPage() {
           </EmptyState>
         ) : (
           <>
-            <DownloadList title={t('downloads.inProgress')} downloads={active} />
-            <DownloadList title={t('downloads.recent')} downloads={finished} />
+            {!selecting && <DownloadList title={t('downloads.inProgress')} downloads={active} />}
+            <DownloadList
+              title={t('downloads.recent')}
+              downloads={finished}
+              selecting={selecting ? { selected, onToggle: toggle, onToggleAll: toggleAll } : undefined}
+            />
           </>
         )}
       </PageBody>
